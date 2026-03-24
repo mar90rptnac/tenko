@@ -19,17 +19,21 @@ async def handle_rollcall(
         logger.info("Returned: rollcall_id=%s, source=%s", rollcall_id, source)
     except Exception as e:
         logger.error("Error in rollcall handling: %s", str(e))
-        await notify(f"點名錯誤: {e}")
+        await notify(f"Rollcall error: {e}")
         return
 
     if source == "number":
-        data = await answer_rollcall_number_async(
+        code = await answer_rollcall_number_async(
             session=auth_session,
             rollcall_id=rollcall_id,
             endpoint=endpoint,
         )
-        logger.info("Number rollcall response: %s", data)
-        await notify(f"點名成功 (數字) - ID: {rollcall_id}")
+        if code is not None:
+            logger.info("Number rollcall success: %s", code)
+            await notify(f"Rollcall success (number) - Code: {code}")
+        else:
+            logger.error("Number rollcall failed: no valid code found")
+            await notify("Rollcall failed (number) - no valid code found")
 
     elif source == "radar":
         radar_response = await answer_rollcall_Radar(
@@ -40,8 +44,8 @@ async def handle_rollcall(
             longitude=longitude,
         )
         logger.info("Radar rollcall response: %s", radar_response.text)
-        await notify(f"點名成功 (雷達) - ID: {rollcall_id}")
+        await notify("Rollcall success (radar)")
 
     else:
         logger.warning("Unknown rollcall source: %s", source)
-        await notify(f"未知點名類型: {source}")
+        await notify(f"Unknown rollcall type: {source}")

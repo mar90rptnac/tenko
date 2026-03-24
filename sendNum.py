@@ -25,8 +25,8 @@ async def try_code(session, url, headers, code):
         logger.debug("Trying %s: %s", code, resp.status)
         if resp.status == 200 and b"on_call" in body:
             logger.info("Correct code found: %s", code)
-            return True
-    return False
+            return code
+    return None
 
 
 async def answer_rollcall_number_async(
@@ -77,12 +77,13 @@ async def answer_rollcall_number_async(
                         task.cancel()
                     await asyncio.gather(*pending, return_exceptions=True)
                     raise finished.exception()
-                if finished.result():
+                result = finished.result()
+                if result is not None:
                     for task in pending:
                         task.cancel()
                     await asyncio.gather(*pending, return_exceptions=True)
-                    return True
+                    return result
                 schedule_next()
 
     logger.error("Unable to find correct code after %s attempts", MAX_NUMBER_CODE)
-    return False
+    return None

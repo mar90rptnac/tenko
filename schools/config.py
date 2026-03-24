@@ -2,10 +2,9 @@
 from dataclasses import dataclass
 from typing import Callable, Optional, Union, Awaitable
 import logging
+import os
 import requests
 from schools.http_headers import session_headers
-
-from schools.http_headers import session_headers  # 或你實際使用的 Session 類型
 
 logger = logging.getLogger(__name__)
 
@@ -31,45 +30,12 @@ async def tku_auth() -> Union[Session, dict]:
     return session
 
 
-async def fju_auth() -> Session:
-    from schools.fju.auth import Authenticator
-    auth = await Authenticator.create()
-    session = auth.login()
-    session.headers.update(session_headers())
-    return session
-
-
-async def au_auth() -> Union[Session, dict]:
-    from schools.au.auth import Authenticator
-
-    auth = await Authenticator.create()
-    session = auth.login()
-    session.headers.update(session_headers())
-    return session
-
-
 SCHOOL_CONFIGS: dict[str, SchoolConfig] = {
     "tku": SchoolConfig(
         key="tku",
         auth_func=tku_auth,
         endpoint="https://iclass.tku.edu.tw",
-        latitude=25.174269373936202,
-        longitude=121.45422774303604,
+        latitude=float(os.getenv("LATITUDE", "25.174269373936202")),
+        longitude=float(os.getenv("LONGITUDE", "121.45422774303604")),
     ),
-    "fju": SchoolConfig(
-        key="fju",
-        auth_func=fju_auth,
-        endpoint="https://elearn2.fju.edu.tw",
-        latitude=25.03659879562293,
-        longitude=121.4328216507679,
-    ),
-    "au": SchoolConfig(
-        key="au",
-        auth_func=au_auth,
-        endpoint="https://tronclass.asia.edu.tw",
-        latitude=24.968099,
-        longitude=121.19054,
-    ),
-    # 未來要 100 間學校，就在這裡繼續加：
-    # "abc": SchoolConfig(key="abc", auth_func=abc_auth, endpoint="https://..."),
 }

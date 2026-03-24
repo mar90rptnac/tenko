@@ -1,6 +1,9 @@
 import asyncio
 import logging
+import os
 import requests
+
+POLL_INTERVAL = int(os.getenv("POLL_INTERVAL", "10"))
 
 if not logging.getLogger().hasHandlers():
     logging.basicConfig(
@@ -12,8 +15,8 @@ logger = logging.getLogger(__name__)
 
 async def wait_for_rollcall(
     session: requests.Session,
-    sec: int = 10,
-    endpoint: str = "https://elearn2.fju.edu.tw",
+    sec: int = POLL_INTERVAL,
+    endpoint: str = "https://iclass.tku.edu.tw",
 ) -> tuple[int, str]:
     """
     Polls the iClass rollcall API until the specified rollcall_id is found.

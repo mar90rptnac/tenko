@@ -4,10 +4,7 @@ import requests
 import urllib3
 import re
 import logging
-from getpass import getpass
 from dotenv import load_dotenv
-import asyncio
-from ui.login import login
 
 urllib3.disable_warnings()
 
@@ -22,6 +19,9 @@ class Authenticator:
         self.session = requests.Session()
         self.session.verify = False
         self.session.headers.update({"Referer": "https://iclass.tku.edu.tw/"})
+        adapter = requests.adapters.HTTPAdapter(pool_connections=1, pool_maxsize=1)
+        self.session.mount("https://", adapter)
+        self.session.mount("http://", adapter)
         self.auth_url = (
             "https://sso.tku.edu.tw/auth/realms/TKU/protocol/openid-connect/auth"
             "?client_id=pdsiclass&response_type=code&redirect_uri=https%3A//iclass.tku.edu.tw/login"
@@ -40,9 +40,7 @@ class Authenticator:
         password = os.getenv("PASSWORD")
 
         if not username or not password:
-            logger.warning("USERNAMEID or PASSWORD not set. Prompting for credentials.")
-            username, password = await login()
-            logger.info("Credentials entered via TUI login")
+            raise ValueError("USERNAMEID and PASSWORD must be set in environment variables.")
 
         logger.info("Creating TKU authenticator for user: %s", username)
         return cls(username, password)
